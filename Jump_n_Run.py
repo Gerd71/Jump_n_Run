@@ -117,6 +117,13 @@ def zeichnen():
     spieler1.spZeichnen()
     pygame.display.update()
 
+def kugel_handler():
+    global kugeln
+    for k in kugeln:
+       if k.x>=0 and k.x<=1200:
+           k.bewegen()
+       else:
+           kugeln.remove(k)
 #Field Boarders
 linkeWand=pygame.draw.rect(screen,(0,0,0),(-2,0,2,600),0)
 rechteWand=pygame.draw.rect(screen,(0,0,0),(1201,0,2,600),0)
@@ -162,12 +169,8 @@ while go:
     if not gedrueckt[pygame.K_SPACE]:
         spieler1.ok=True
 
-    for k in kugeln:
-        if k.x>=0 and k.x<=1200:
-            k.bewegen()
-        else:
-            kugeln.remove(k)
-
+   
+    kugel_handler()
     zeichnen()
 
     clock.tick(60)
