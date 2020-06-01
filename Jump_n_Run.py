@@ -36,10 +36,12 @@ class spieler:
     def laufen(self,liste):
         if liste[0]:
             self.x-=self.gesch
+            #States for player [links,rechts,stand,sprung]
             self.richtg=[1,0,0,0]
             self.schritteLinks+=1
         if liste[1]:
             self.x+=self.gesch
+            #States for player [links,rechts,stand,sprung]
             self.richtg=[0,1,0,0]
             self.schritteRechts+=1
 
@@ -48,6 +50,7 @@ class spieler:
         self.schritteRechts=0
 
     def stehen(self):
+        #States for player [links,rechts,stand,sprung]
         self.richtg=[0,0,1,0]
         self.resetSchritte()
     def sprungSetzen(self):
@@ -57,6 +60,7 @@ class spieler:
             pygame.mixer.Sound.play(sprungSound)
     def springen(self):
         if self.sprung:
+            #States for player [links,rechts,stand,sprung]
             self.richtg=[0,0,0,1]
             if self.sprungvar>=-15:
                 n=1
@@ -108,13 +112,78 @@ class kugel:
     def zeichnen(self):
         pygame.draw.circle(screen,self.farbe,(self.x,self.y),self.radius,0)
 
+class zombie():
+    def __init__(self,x,y,gesch,breite,hoehe,richtg,xMin,xMax):
+        self.x=x
+        self.y=y
+        self.gesch=gesch
+        self.breite=breite
+        self.hoehe=hoehe
+        self.richtg=richtg
+        self.schritteRechts=0
+        self.schritteLinks=0
+        self.xMin=xMin
+        self.xMax=xMax
+        self.leben=6
+        self.linksListe = [pygame.image.load("Grafiken/l1.png"),pygame.image.load("Grafiken/l2.png"),pygame.image.load("Grafiken/l3.png"),pygame.image.load("Grafiken/l4.png"),pygame.image.load("Grafiken/l5.png"),pygame.image.load("Grafiken/l6.png"),pygame.image.load("Grafiken/l7.png"),pygame.image.load("Grafiken/l8.png")]
+        self.rechtsListe = [pygame.image.load("Grafiken/r1.png"),pygame.image.load("Grafiken/r2.png"),pygame.image.load("Grafiken/r3.png"),pygame.image.load("Grafiken/r4.png"),pygame.image.load("Grafiken/r5.png"),pygame.image.load("Grafiken/r6.png"),pygame.image.load("Grafiken/r7.png"),pygame.image.load("Grafiken/r8.png")]
+        self.ganz = pygame.image.load("Grafiken/voll.png")
+        self.halb = pygame.image.load("Grafiken/halb.png")
+        self.leer = pygame.image.load("Grafiken/leer.png")
 
+    def herzen(self):
+        if self.leben>=2:
+            screen.blit(self.ganz,(507,15))
+        if self.leben>=4:
+            screen.blit(self.ganz,(569,15))
+        if self.leben==6:
+            screen.blit(self.ganz,(631,15))
+        if self.leben==1:
+            screen.blit(self.halb,(507,15))
+        elif self.leben==3:
+            screen.blit(self.halb,(569,15))
+        elif self.leben==5:
+            screen.blit(self.halb,(631,15))
+        if self.leben<=0:
+            screen.blit(self.leer,(507,15))
+        if self.leben<=2:
+            screen.blit(self.leer,(569,15))
+        if self.leben<=4:
+            screen.blit(self.leer,(631,15))
+
+    def zZeichnen(self):
+        if self.schritteRechts==63:
+            self.schritteRechts=0   
+        if self.schritteLinks==63:
+            self.schritteLinks=0
+
+        if self.richtg[0]:
+            screen.blit(self.linksListe[self.schritteLinks//8],(self.x,self.y))
+        if self.richtg[1]:
+            screen.blit(self.rechtsListe[self.schritteRechts//8],(self.x,self.y))
+
+    def laufen(self):
+        self.x+=self.gesch
+        if self.gesch>0:
+            self.richtg=[0,1]
+            self.schritteRechts+=1
+        if self.gesch<0:
+            self.richtg=[1,0]
+            self.schritteLinks+=1
+
+    def hinher(self):
+        if self.x>self.xMax:
+            self.gesch*=-1
+        elif self.x<self.xMin:
+            self.gesch*=-1
+        self.laufen()
 
 def zeichnen():
     screen.blit(hintergrund,(0,0))
     for k in kugeln:
         k.zeichnen()
     spieler1.spZeichnen()
+    zombie1.zZeichnen()
     pygame.display.update()
 
 def kugel_handler():
@@ -124,20 +193,24 @@ def kugel_handler():
            k.bewegen()
        else:
            kugeln.remove(k)
+
+def kollision():
+    global kugeln
+    zombieRechteck=pygame.rect(zombie1.x+18,zombie1.y+24,zombie1.breite-36,zombie1.hoehe-24)
+    pygame.draw.rect(screen,(255,255,0),zombieRechteck,7)
+
+
+
 #Field Boarders
 linkeWand=pygame.draw.rect(screen,(0,0,0),(-2,0,2,600),0)
 rechteWand=pygame.draw.rect(screen,(0,0,0),(1201,0,2,600),0)
 
-#Generate Spieler
+#Generate Spieler und Zombie
 spieler1=spieler(300,393,5,96,128,-16,[0,0,1,0],0,0)
+zombie1=zombie(600,393,4,96,128,[0,0],40,1000)
 
-#States for player [links,rechts,stand,sprung]
-richtg=[0,0,0,0]
-schritteRechts=0
-schritteLinks=0
-
+#Das Array fuer die Kugeln
 kugeln=[]
-
 
 #Main Game Loop
 go=True
@@ -171,6 +244,7 @@ while go:
 
    
     kugel_handler()
+    zombie1.hinher()
     zeichnen()
 
     clock.tick(60)
