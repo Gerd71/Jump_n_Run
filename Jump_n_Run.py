@@ -184,6 +184,8 @@ def zeichnen():
         k.zeichnen()
     spieler1.spZeichnen()
     zombie1.zZeichnen()
+    zombie1.herzen()
+  
     pygame.display.update()
 
 def kugel_handler():
@@ -196,9 +198,13 @@ def kugel_handler():
 
 def kollision():
     global kugeln
-    zombieRechteck=pygame.rect(zombie1.x+18,zombie1.y+24,zombie1.breite-36,zombie1.hoehe-24)
-    pygame.draw.rect(screen,(255,255,0),zombieRechteck,7)
-
+    zombieRechteck=pygame.Rect(zombie1.x+18,zombie1.y+24,zombie1.breite-36,zombie1.hoehe-24)
+    
+    for k in kugeln:
+        kugelRechteck=pygame.Rect(k.x-k.radius,k.y-k.radius,k.radius*2,k.radius*2)
+        if zombieRechteck.colliderect(kugelRechteck):
+            kugeln.remove(k)
+            zombie1.leben-=1
 
 
 #Field Boarders
@@ -245,6 +251,7 @@ while go:
    
     kugel_handler()
     zombie1.hinher()
+    kollision()
     zeichnen()
 
     clock.tick(60)
