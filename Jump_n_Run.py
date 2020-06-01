@@ -11,7 +11,8 @@ pygame.display.set_caption("Jumpy by Gerd Harlander")
 sprungSound=pygame.mixer.Sound("Sounds/sprung.wav")
 
 #Load png´s for the 4 different states
-stehen=pygame.image.load("Grafiken/stand.png")
+angriffLinks=sprung=pygame.image.load("Grafiken/angriffLinks.png")
+angriffRechts=sprung=pygame.image.load("Grafiken/angriffRechts.png")
 sprung=pygame.image.load("Grafiken/sprung.png")
 
 #List with 8 pictures for Animation
@@ -30,6 +31,8 @@ class spieler:
         self.schritteRechts=schritteRechts
         self.schritteLinks=schritteLinks
         self.sprung=False
+        self.last=[1,0]
+        self.ok=True
     def laufen(self,liste):
         if liste[0]:
             self.x-=self.gesch
@@ -72,18 +75,45 @@ class spieler:
         #Schritte Links animation
         if self.richtg[0]:
             screen.blit(linksGehen[self.schritteLinks//8],(self.x,self.y))
+            self.last=[1,0]
         #Schritte Rechts animation
         if self.richtg[1]:
             screen.blit(rechtsGehen[self.schritteRechts//8],(self.x,self.y))
+            self.last=[0,1]
         #Stehen animation
         if self.richtg[2]:
-            screen.blit(stehen,(self.x,self.y))
+            if self.last[0]:
+                screen.blit(angriffLinks,(self.x,self.y))
+            else:
+                screen.blit(angriffRechts,(self.x,self.y))
         #Springen animation
         if self.richtg[3]:
             screen.blit(sprung,(self.x,self.y))
 
+class kugel:
+    def __init__(self,spx,spy,richtung,radius,farbe,gesch):
+        self.x=spx
+        self.y=spy
+        if richtung[0]:
+            self.x+=5
+            self.gesch=-1*gesch
+        elif richtung[1]:
+            self.x+=92
+            self.gesch=gesch
+        self.y+=84
+        self.radius=radius
+        self.farbe=farbe
+    def bewegen(self):
+        self.x+=self.gesch
+    def zeichnen(self):
+        pygame.draw.circle(screen,self.farbe,(self.x,self.y),self.radius,0)
+
+
+
 def zeichnen():
     screen.blit(hintergrund,(0,0))
+    for k in kugeln:
+        k.zeichnen()
     spieler1.spZeichnen()
     pygame.display.update()
 
@@ -98,6 +128,9 @@ spieler1=spieler(300,393,5,96,128,-16,[0,0,1,0],0,0)
 richtg=[0,0,0,0]
 schritteRechts=0
 schritteLinks=0
+
+kugeln=[]
+
 
 #Main Game Loop
 go=True
@@ -120,7 +153,21 @@ while go:
     if gedrueckt[pygame.K_UP]:
         spieler1.sprungSetzen()
     spieler1.springen()
-     
+
+    if gedrueckt[pygame.K_SPACE]:
+        if len(kugeln)<=4 and spieler1.ok:
+            kugeln.append(kugel(round(spieler1.x),round(spieler1.y),spieler1.last,8,(0,0,0),7))
+
+        spieler1.ok=False
+    if not gedrueckt[pygame.K_SPACE]:
+        spieler1.ok=True
+
+    for k in kugeln:
+        if k.x>=0 and k.x<=1200:
+            k.bewegen()
+        else:
+            kugeln.remove(k)
+
     zeichnen()
 
     clock.tick(60)
